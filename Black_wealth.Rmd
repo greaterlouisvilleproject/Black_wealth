@@ -46,13 +46,13 @@ If accepted, interest rates are higher and the overall mortgage amount is lower.
 
 Overall, In Louisville, Black residents receive fewer than half the number of mortgages per capita as White residents. 
 
-![]mortgage_number_race.png)
+![](mortgage_number_race.png)
 
 [Nationally](https://www.federalreserve.gov/econres/notes/feds-notes/disparities-in-wealth-by-race-and-ethnicity-in-the-2019-survey-of-consumer-finances-20200928.htm), we see that in households under 35, 46% of White families own houses, compared to only 17% of Black families. While this gap closes a little as households age, early ownership allows for more time to build wealth. 
 
 ### Home Values over Time
 
-The story of the Black-White wealth gap doesn’t stop after a Black family acquires a house. While we only have home appreciation values by geography, there is a clear pattern where houses in black neighborhoods appreciate at a slower rate, and therefore build less wealth. 
+The story of the Black-White wealth gap doesn’t stop after a Black family acquires a house. While we only have home appreciation values by geography, there is a clear pattern where houses in Black neighborhoods appreciate at a slower rate, and therefore build less wealth. 
 
 ![](long_term_appreciation.png)
 
