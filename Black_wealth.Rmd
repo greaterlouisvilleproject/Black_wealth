@@ -68,6 +68,8 @@ jfco_sf <- st_as_sf(jfco_shp) %>%
 
 There is no one universally-accepted defintion of wealth within the Black community and, therefore, no direct data on Black Wealth in Louisville. Here we assess national data and local homeownership data to give the most complete information currently available. 
 
+# Wealth
+
 Wealth data remains scarce in general because the subject of wealth can be sensitive and is not taxed in a comprehensive way. Multiple surveys ask about income, and tax records show yearly income, but this data provides an incomplete picture, missing key metrics such as property ownership, community investment, inherited wealth, etc. As such, our measures of wealth remain indirect. 
 
 The national Survey of Consumer Finances (SCF), which occurs every three years, is our best source of wealth data. It measures "all assets over which a family has legal claim that can be used to finance its present and future consumption". The most recently available data is from 2019, leaving the impact of the ongoing pandemic undefined. The key findings from the [Federal Reserve report](https://www.federalreserve.gov/econres/notes/feds-notes/disparities-in-wealth-by-race-and-ethnicity-in-the-2019-survey-of-consumer-finances-20200928.htm) include:
@@ -78,18 +80,166 @@ The national Survey of Consumer Finances (SCF), which occurs every three years, 
 - Inheritances and other sources of family support are the single largest driver of the racial wealth gap. 
 - White families are more likely to own homes at any age, but the Black-White gap is largest in households under 35, likely reflecting parental wealth. 
 
-## Housing 
+# Business Ownership
+
+Entrepreneurship is a key driver of wealth creation. Business owners are able to build wealth through their companies, and money spent at locally-owned business contributes to local wages and neighborhood development.
+
+We have some data on business ownership from the Census Bureau's Annual Business Survey. This data only includes "employer businesses" that have at least one employee, so it is skewed towards larger organizations. The majority of businesses are non-employer businesses that do not have employees, but they
+
+14,785 employer businesses
+$152,432,057,000
+<!-- 57,630 non-employer businesses, -->
+<!-- $2,757,359,000 -->
+<!-- $2.8 BN  -->
+
+## Comparison to peer cities
+```{r setup, include=FALSE}
+# Knitr options
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+                      
+#, message = FALSE, dev.args=list(bg="transparent"))
+
+# Set up fonts
+library(showtext)
+showtext_auto()
+
+font_add("Montserrat", "Montserrat/Montserrat-Regular.ttf")
+font_add("Montserrat Bold", "Montserrat/Montserrat-SemiBold.ttf")
+
+# Load packages
+library(readr)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(magrittr)
+library(purrr)
+library(scales)
+library(ggrepel)
+library(leaflet)
+library(sf)
+library(plotly)
+library(tidygeocoder)
+library(viridis)
+library(gt)
+
+# Import data and functions from glp packages
+source("helper_functions.R")
+load("glptools_exports.RData")
+```
+
+```{r}
+business_ownership_county_clean <- business_ownership_county %>%
+  group_by(FIPS, year) %>%
+  mutate(firm_percent = firms_num / firms_num[sex=="total" & race == "total"] * 100) %>%
+  ungroup() %>%
+  filter(race == "black") %>%
+  pull_peers(add_info = T, FIPS_df = FIPS_df) %>%
+  filter(current == 1)
+
+business_ownership_county_summary <- business_ownership_county_clean %>%
+  filter(FIPS != "21111") %>%
+  summarize(avg_ratio = mean(firm_percent / pop_percent)) %>%
+  pull(avg_ratio)
+
+business_ownership_county_clean %<>%
+  mutate(marker_color = if_else(city == "Louisville", '#d63631', "#000000")) 
+
+lou <- filter(business_ownership_county_clean, city == "Louisville")
+
+a <- list(
+  x = lou$pop_percent,
+  y = lou$firm_percent,
+  text = lou$city,
+  xref = "x",
+  yref = "y",
+  showarrow = F,
+  arrowhead = 0,
+  ax = 0,
+  ay = 10,
+  yanchor = "top")
+
+b <- list(
+  x = 12,
+  y = 11,
+  text = "Equal representation",
+  xref = "x",
+  yref = "y",
+  showarrow = F,
+  arrowhead = 0,
+  ax = 0,
+  ay = 30,
+  xanchor = "left")
+
+c <- list(
+  x = 40,
+  y = 7,
+  text = "Average representation in peer cities",
+  xref = "x",
+  yref = "y",
+  showarrow = F,
+  arrowhead = 0,
+  ax = 0,
+  ay = -16,
+  textangle = -15.8)
+
+plot_ly(business_ownership_county_clean) %>%
+  add_markers(x = ~`pop_percent`, y = ~`firm_percent`, 
+              text = business_ownership_county_clean$city,
+              color = ~I(marker_color),
+              marker = list(size = 10),
+              hoverinfo = 'text',
+              showlegend = FALSE) %>%
+  add_segments(x = 0, xend = 60, 
+               y = 0, yend = 60,
+               name = "Equality",
+               line = list(color = '#323844', width = 1),
+              showlegend = FALSE) %>%
+  add_segments(x = 0, xend = 60, 
+               y = 0, yend = business_ownership_county_summary * 60, 
+               name = "Peer Average",
+               line = list(color = '#323844', width = 1, dash = 'dash'),
+              showlegend = FALSE) %>%
+  layout(
+    font = list(family = "Montserrat"),
+    
+    annotations = list(a, b, c),
+    
+    title = "Black Business Ownership by Peer City",
+    xaxis = list(title = "Percent of Residents who are Black"),
+    yaxis = list(title = "Percent of Businesses Owned by Black Residents", 
+                 range = c(0, 20)))
+
+
+    
+```
+
+## Ranking
+
+```{r}
+ranking(business_ownership_county_clean,
+        "firms_num_per_100",
+        race = "black",
+        plot_title = "Black Business Ownership",
+        y_title = "Businesses per 100 residents",
+        year = 2017,
+        text_size = 2, 
+        accuracy = 0.01,
+        FIPS_df = FIPS_df)
+```
+
+
+# Housing 
 
 While housing is not the sole source of wealth, it represents a significant component. Housing reflects both historical wealth patterns––parental wealth makes it easier to buy a home––and is a major generator of wealth as, historically, homes have risen in value, increasing the wealth of those who own them. 
 
 The data show stark divides between Black and white families throughout the homeownership process, demonstrating one aspect of the wealth gap. 
 
-### Initial Wealth
+## Initial Wealth
 
 We start with the overall wealth data showing less parental wealth and therefore less help with purchasing an initial home. 
 (I think more context/stats, etc is needed here)
 
-### Securing a Mortgage 
+## Securing a Mortgage 
 
 While the wealth gap has a number of causes, a major cause related to housing is [redlining](https://www.arcgis.com/apps/MapSeries/index.html?appid=a73ce5ba85ce4c3f80d365ab1ff89010) - explicitly denying loans to Black families who wanted to purchase houses in certain neighborhoods. In 2019, Black residents were denied loans at nearly twice the rate of white residents.
 
@@ -107,23 +257,111 @@ Overall, Black residents in Louisville receive fewer than half the number of mor
 
 [Nationally](https://www.federalreserve.gov/econres/notes/feds-notes/disparities-in-wealth-by-race-and-ethnicity-in-the-2019-survey-of-consumer-finances-20200928.htm), 46% of white families and only 17% of Black families in households under 35 own homes. While this gap closes slightly as households age (list example comparison in older age group), early ownership allows for more time to build wealth. 
 
-### Home Valuation over Time 
+## Home Valuation over Time 
 
 The racial wealth gap in housing extends beyond home buying. Considering home appreciation values by geography, there is a clear pattern: houses in Black neighborhoods appreciate at a slower rate, building less wealth. 
 
 ![](long_term_appreciation.png)
 
-### Home Valuation by Geography
+## Home Valuation by Geography
 
 On average, owner-occupied homes in Black neighborhoods are undervalued by $48,000 per house in the U.S. [According to that same reserach by the Brookings Institute](https://www.brookings.edu/research/devaluation-of-assets-in-black-neighborhoods/) The median home value in majority Black neighborhoods is \$89,681, but would be \$117,593 if houses were not devalued in the Louisville Metro Area. This difference consistutes a 27% undervaluation from what home values in Black neighborhoods would be if based on structural characteristics (e.g. sq. ft, year built) and neighborhood amenities (e.g. walkability, school districts, commute time).
 
-### Property Taxes
+## Property Taxes
 
 While facing lower home values on the market, Black homes are overvalued by the property tax administration, and thus face [higher taxation relative to the market value of their homes](https://www.washingtonpost.com/context/the-assessment-gap-racial-inequalities-in-property-taxation/215957a4-d5ad-47cd-821a-070cf23b6bc7/). 
 
-## The Tip of the Iceberg 
+## Homeownership {.tabset}
 
 We have the most data on housing - but this is not the only area of wealth building where this same pattern plays out. Black families both start with less wealth (and therefore less opportunities to build on it even in a ‘fair’ market) and face discrimination at each step of the process. 
+### Ranking
+```{r}
+housing_df <- housing_county %>%
+  filter(var_type == "percent") 
+
+ranking(housing_df, homeownership, 
+        race = "black",
+        year = 2019,
+        text_size = 2, 
+        FIPS_df = FIPS_df,
+        plot_title = "Homeownership",
+        caption = "Source: Greater Louisville Project
+                   GLP analysis of ACS microdata from IPUMS USA")
+```
+
+### Trend
+```{r}
+housing_df_clean <- housing_df %>%
+  filter(FIPS == "21111", sex == "total", race != "other") %>%
+  mutate(race = str_to_title(race))
+
+plt_by(housing_df_clean,
+       race,
+       homeownership,
+       title_text = "Homeownership by Race",
+       caption_text = "Source: Greater Louisville Project
+                       GLP analysis of ACS microdata from IPUMS USA")
+```
+
+### Map
+```{r}
+housing_map_clean <- housing_tract %>%
+  filter(sex == "total", race == "total", year == 2017, var_type == "percent")
+
+jfco_sf <- map_tract %>%
+  left_join(housing_map_clean, by = "tract")
+
+make_map(homeownership, 
+         "Homeownership",
+         legend = "Percent",
+         caption = "Source: Greater Louisville Project
+                    ACS table B25106")
+```
+
+# Household Income {.tabset}
+
+## Trendline
+
+```{r hh_income_ranking}
+hh_income_filtered <- hh_income_county %>%
+  filter(var_type == "estimate", 
+         race %in% c("black", "total", "white", "hispanic"),
+         FIPS == "21111") %>%
+  mutate(race = str_to_title(race))
+
+plt_by(hh_income_filtered,
+       race,
+       hh_income,
+       y_axis = "Dollars",
+       units = "Dollars",
+       title_text = "Household Income by Race",
+       subtitle_text = "Adjusted for inflation to 2019 dollars",
+       caption_text = "Source: Greater Louisville Project
+                       ACS Tables P053, P152, B19013")
+```
+
+## Map
+
+```{r hh_income_map}
+hh_income_tract_clean <- hh_income_tract %>%
+  filter(year == 2016,
+         race %in% c("total", "black")) %>%
+  pivot_wider(names_from = race, values_from = hh_income, names_prefix = "hh_income_")
+
+jfco_sf %<>%
+  left_join(hh_income_tract_clean, by = "tract") %>%
+  mutate(hh_income_black = if_else(hh_income_black < -1000000, NA_real_, hh_income_black))
+
+make_map(hh_income_total, 
+         "Median Household income",
+         legend = "Dollars",
+         caption = "Source: Greater Louisville Project
+                    ACS Table B19013")
+```
+
+# The Tip of the Iceberg 
+
+We have the most data on housing, but this is not the only area of wealth building where systemic inequality is pervasive. Black families start with less wealth (and therefore have less opportunities to build on it even in an 'equal’ market) and face discrimination at each step of the process. A better understanding of what metrics are important for describing Black wealth in both quantitative and qualitative terms is important to improve our work in this area. 
 
 # Home Mortgages {.tabset .tabset-fade .tabset-pills}
 
