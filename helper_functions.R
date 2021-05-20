@@ -8,10 +8,15 @@ if (FALSE) {
   library(glpdata)
   library(glptools)
   
+  business_ownership_county %<>%
+    select(-city, -baseline, -current)
+  
   save(hh_income_county, hh_income_tract, 
        housing_county, housing_tract,
+       home_loan_tract, home_loan_county,
+       HPI_county, HPI_zip,
        business_ownership_county,
-       map_tract, FIPS_df,
+       map_tract, map_zip, FIPS_df,
        file = "glptools_exports.RData")
   # save(map_tract, map_nh, map_zip, map_county,
   #      FIPS_df, MSA_df, MSA_FIPS,
