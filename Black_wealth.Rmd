@@ -9,9 +9,7 @@ output:
 
 ```{r setup, message = FALSE, warning = FALSE}
 # Knitr options
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
-                      
-#, message = FALSE, dev.args=list(bg="transparent"))
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, dev.args=list(bg="transparent"))
 
 library(tidyverse)
 library(magrittr)
@@ -169,6 +167,53 @@ ranking(business_ownership_county_clean,
         text_size = 2, 
         accuracy = 0.01,
         FIPS_df = FIPS_df)
+```
+
+## Local business creation
+
+The map below shows business filings for the last week within Jefferson County. We are working with the Secretary of State's Office to get a more complete listing and summarize this into data.
+
+```{r}
+library(tidygeocoder)
+library(leaflet)
+
+test <- readxl::read_excel("business registration.xlsx")
+
+lou_zips <- glptools::FIPS_zip %>% 
+  filter(FIPS == "21111") %>%
+  pull(zip) %>%
+  as.numeric()
+
+test %<>% filter(`Principal Office Zip` %in% lou_zips)
+
+test %<>%
+  transmute(
+    Name,
+    street = `Principal Office Address 1`,
+    city = `Principal Office City`,
+    state = "KY",
+    postalcode = `Principal Office Zip`)
+
+# Use free default providers first (Census and OSM)
+test_cascade <- test %>%
+  geocode(
+    street = street,
+    city = city,
+    state = state,
+    postalcode = postalcode,
+    method = "cascade")
+
+test_map <- st_as_sf(test_cascade,
+                     coords = c("long", "lat"), 
+                     crs = 4326)
+
+st_crs(jfco_sf) <- 4326
+
+t=st_filter(test_map, jfco_sf)
+
+leaflet(t) %>%
+  addTiles() %>%
+  addCircleMarkers(label = t$Name)
 ```
 
 
