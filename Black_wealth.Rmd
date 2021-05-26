@@ -36,11 +36,11 @@ jfco_sf <- st_as_sf(jfco_shp) %>%
 ```
 
 
-## Overall
+# Introduction
 
-There is no one universally-accepted definition of wealth within the Black community and, therefore, no direct data on Black Wealth in Louisville. This report assesses national data on wealth and local data on business ownership, housing finance, and income to give the most complete information currently available. 
+There is no one universally-accepted definition of wealth within the Black community and, therefore, no direct data on Black Wealth in Louisville. This report looks at one source of national data on monetary wealth and then looks at local data in three areas that are closely related to wealth and wealth-building: business ownership, housing finance, and income. 
 
-# Wealth
+# Wealth (National)
 
 Wealth data remains scarce in general because the subject of wealth can be sensitive and is not taxed in a comprehensive way. Multiple surveys ask about income, and tax records show yearly income, but this data provides an incomplete picture, missing key metrics such as property ownership, community investment, inherited wealth, etc. As such, our measures of wealth remain indirect. 
 
@@ -52,7 +52,7 @@ The national Survey of Consumer Finances (SCF), which occurs every three years, 
 - Inheritances and other sources of family support are the single largest driver of the racial wealth gap. 
 - White families are more likely to own homes at any age, but the Black-White gap is largest in households under 35, likely reflecting parental wealth. 
 
-# Business Ownership {.tabset}
+# Business Ownership (Local) {.tabset}
 
 Entrepreneurship is a key driver of wealth creation. Business owners are able to build wealth through their companies, and money spent at locally-owned business contributes to local wages and neighborhood development.
 
@@ -217,9 +217,9 @@ leaflet(t) %>%
 ```
 
 
-# Housing 
+# Housing (Local)
 
-While housing is not the sole source of wealth, it represents a significant component. Housing reflects both historical wealth patterns––parental wealth makes it easier to buy a home––and is a major generator of wealth as, historically, homes have risen in value, increasing the wealth of those who own them. 
+While housing represents a significant component of wealth. Housing reflects both historical wealth patterns––parental wealth makes it easier to buy a home––and is a major generator of wealth as, historically, homes have risen in value, increasing the wealth of those who own them. 
 
 The data show stark divides between Black and white families throughout the homeownership process, demonstrating one aspect of the wealth gap. 
 
@@ -489,7 +489,7 @@ make_map(homeownership,
                     ACS table B25106")
 ```
 
-# Household Income {.tabset}
+# Household Income (Local) {.tabset}
 
 Many activities that lead to wealth-creation, like starting a business or getting a degree, are not directly tied to income. However, the majority of families build wealth by saving the money they earn. Disparities in income lead to larger disparities in wealth.
 
@@ -539,5 +539,5 @@ make_map(hh_income_total,
 
 # The Tip of the Iceberg 
 
-We have the most data on housing, but this is not the only area of wealth building where systemic inequality is pervasive. Black families start with less wealth (and therefore have less opportunities to build on it even in an 'equal’ market) and face discrimination at each step of the process. A better understanding of what metrics are important for describing Black wealth in both quantitative and qualitative terms is important to improve our work in this area. 
+We have the most data on housing, income, and businesses, but these are not the only areas of wealth building where systemic inequality is pervasive. Black families start with less wealth (and therefore have less opportunities to build on it even in an 'equal’ market) and face discrimination at each step of the process. A better understanding of what metrics are important for describing Black wealth in both quantitative and qualitative terms is important to improve our work in this area. 
 
