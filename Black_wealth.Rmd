@@ -277,50 +277,7 @@ ggplot(jfco_sf) +
 
 ### Mortgages by race
 
-We can also examine mortgage data by race. Black residents in Louisville received fewer than half the number of mortgages per person that White residents did in 2019.
-
 ```{r mortgage_number_race}
-
-# Interactive Mortgage map
-# load("home_loans_detail.RData")
-# home_loan_detail %<>%
-#   select(tract, year, race, sex, loan_status, income, loan, rate) %>%
-#   mutate(tract = str_extract(tract, "21111.*")) %>%
-#   filter(year == 2019, loan_status == "approved")
-# 
-# num_points <- home_loan_detail %>%
-#   group_by(tract) %>%
-#   summarise(n = n(), .groups="drop") %>%
-#   left_join(glptools::map_tract, by = "tract") %>%
-#   group_by(tract) %>%
-#   nest() %>%
-#   mutate(points = map(data, function(x) st_sample(x$geometry, x$n))) %>%
-#   unnest()
-# 
-# home_loan_detail %<>% arrange(tract)
-# num_points %<>% arrange(tract)
-# 
-# st_geometry(home_loan_detail) <- num_points$points
-# 
-# library(leaflet)
-# 
-# 
-# fillpal <- colorFactor(RColorBrewer::brewer.pal(5, "Dark2"), domain = unique(home_loan_detail$race))
-# 
-# leaflet(filter(home_loan_detail, is.na(race))) %>%
-#   addCircleMarkers(
-#     radius = ~sqrt(loan / 30000),
-#     #radius = 5,
-#     stroke=T,
-#     fillColor = ~fillpal(race),
-#     color = ~fillpal(race),
-#     weight = 1,
-#     fillOpacity = 0.15,
-#     opacity = 0.4) %>%
-#   addLegend(pal = fillpal, values = unique(home_loan_detail$race)) %>%
-#   addTiles()
-
-
 mortgage_county <- home_loan_county
 
 mortgage_county %<>% filter(FIPS == "21111", sex=="total", race %in% c("black", "white")) %>%
@@ -332,8 +289,6 @@ plt_by(mortgage_county, Race, loan_number_per_100, "Mortgages by race", y_axis =
 
 ### Mortgage Dollars by race
 
-The racial disparity is mortgages is even larger when you incorporate the dollar amount of mortgages issues. In 2019, white residents received \$2.60 in mortgages for every \$1 that Black residents received after adjusting for population size.
-
 ```{r mortgage_dollars_race}
 plt_by(mortgage_county, Race, loan_amount_pp, "Mortgage Lending by race", y_axis = "Dollars per 100 People", y_min = 0,
        units = "Dollars")
@@ -341,8 +296,6 @@ plt_by(mortgage_county, Race, loan_amount_pp, "Mortgage Lending by race", y_axis
 
 
 ### Denial Rates by Race
-
-Black residents are denied mortgages at a rate roughly twice that of white residents. The mortgage denial rate for Black residents has decreased from a high of 29% in 2008 to a low of 14% in 2019. However, it has not shown signs of decreasing in recent years, and Black residents are more likely to be impacted by the economic impacts of COVID-19, worsening the disparity in 2020 and beyond.
 
 ```{r mortgage_denial_race}
 plt_by(mortgage_county, Race, denial, "Mortgage Denial by race", y_axis = "Denial Rate", y_min = 0, units= "Percent")
