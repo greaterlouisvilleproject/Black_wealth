@@ -230,6 +230,8 @@ cols_spec <- cols("organization_number" = col_character(),
                   "for_profit" = col_character(),
                   "record_num" = col_character())
 
+#File available at 
+
 all_companies <- read_tsv("AllCompanies20210430.txt",
                           col_names = names(cols_spec$cols),
                           col_types = cols_spec,
@@ -978,11 +980,6 @@ ggplot(tax_data, aes(x=percent_black, y=sales_ratio)) +
   labs(x = "Percent of Residents who are Black",
        y = "Assessment Ratio")
 
-    
-    
-```
-
-```{r, eval=FALSE}
 # Method 1: Summarize daata for each group based on Dr. Perry's definitions
 nb_sales_ratio <- tax_data %>% 
   filter(percent_black <= 1) %>%
@@ -1034,9 +1031,6 @@ leaflet(test) %>%
   addTiles()%>%
   addPolygons(fill = test$pct_black >= 50)
   
-```
-
-```{r, eval=FALSE}
 library(glptools)
 
 housing_vars_05_5yr <- build_census_var_df("acs5", "B25077")

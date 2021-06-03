@@ -8,9 +8,6 @@ if (FALSE) {
   library(glpdata)
   library(glptools)
   
-  business_ownership_county %<>%
-    select(-city, -baseline, -current)
-  
   save(hh_income_county, hh_income_tract, 
        housing_county, housing_tract,
        home_loan_tract, home_loan_county,
