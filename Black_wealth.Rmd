@@ -230,7 +230,7 @@ cols_spec <- cols("organization_number" = col_character(),
                   "for_profit" = col_character(),
                   "record_num" = col_character())
 
-#File available at 
+#File available at https://drive.google.com/file/d/1cTCZK0A4XTru3HYPLLbDnu0DoKHlB5l1/view?usp=sharing
 
 all_companies <- read_tsv("AllCompanies20210430.txt",
                           col_names = names(cols_spec$cols),
