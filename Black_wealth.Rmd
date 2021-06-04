@@ -42,7 +42,7 @@ jfco_sf <- st_as_sf(jfco_shp) %>%
 
 ## Introduction
 
-There is no one universally-accepted definition of wealth within the Black community and, therefore, no direct data on Black Wealth in Louisville. This report looks at one source of national data on monetary wealth and then looks at local data in three areas that are closely related to wealth and wealth-building: business ownership, housing finance, and income. 
+There is no universally-accepted definition of wealth within the Black community. Even within the traditional definitions of monetary wealth, there is no direct data on Black Wealth in Louisville. This report looks at the available national data on monetary wealth and then looks at local data in three areas that are closely related to wealth and wealth-building: business ownership, housing finance, and income. 
 
 
 # Wealth (National)
@@ -53,27 +53,31 @@ lodown( "scf" , output_dir = file.path( path.expand( "~" ) , "SCF" ) )
 
 ```
 
-Wealth data remains scarce in general because the subject of wealth can be sensitive and is not taxed in a comprehensive way. Multiple surveys ask about income, and tax records show yearly income, but this data provides an incomplete picture, missing key metrics such as property ownership, community investment, inherited wealth, etc. As such, our measures of wealth remain indirect. 
+Wealth data remains scarce in general because the subject of wealth can be sensitive and is not tracked in a comprehensive way. Multiple surveys ask about income, and tax records show yearly income, but this data provides an incomplete picture, often missing key metrics such as property ownership, community investment, inherited wealth, etc. As such, our measures of wealth remain indirect. 
 
 The national Survey of Consumer Finances (SCF), which occurs every three years, is our best source of wealth data. It measures "all assets over which a family has legal claim that can be used to finance its present and future consumption". The most recently available data is from 2019, leaving the impact of the ongoing pandemic undefined. The key findings from the [Federal Reserve report](https://www.federalreserve.gov/econres/notes/feds-notes/disparities-in-wealth-by-race-and-ethnicity-in-the-2019-survey-of-consumer-finances-20200928.htm) include:
 
 - The median white family has \$188,200, while the median Black family has \$24,100, <i>less than 15% of what white families hold.</i> 
 - After falling from 2007 to 2013, median Black wealth has increased from 2013-2019; however, the gap between White and Black families remains largely unchanged. 
 - The gap in wealth starts at an early age, with white families under 35 having a median wealth of \$25,400 and Black families having \$600. 
-- Inheritances and other sources of family support are the single largest driver of the racial wealth gap. 
 - White families are more likely to own homes at any age, but the Black-White gap is largest in households under 35, likely reflecting parental wealth. 
+
+The Federal Reserve Report concludes that inheritances and other sources of family support are the single largest driver of the racial wealth gap. 
+
 
 # Business Ownership (Local) {.tabset}
 
-Entrepreneurship is a key driver of wealth creation. Business owners are able to build wealth through their companies, and money spent at locally-owned business contributes to local wages and neighborhood development.
+Entrepreneurship is a key driver of wealth creation and generational wealth. Business owners are able to build wealth through their companies, and money spent at locally-owned businesses contribute to local wages and neighborhood development.
 
-At the county level, business ownership by race is only available for "employer businesses," businesses that have at least one employee. The data shows a a large racial disparity in ownership of employer businesses in Louisville. While employer businesses only make up about 20% of local registered businesses, they comprise 98.2% of local business revenue.
+Data on business ownership are available for all businesses for the Louisville MSA, which includes 9 surrounding counties. At the county level, data on business ownership is only available for "employer businesses": businesses that have at least one employee.
 
-Data are available for all businesses (including businesses without employees) for the Louisville MSA, which includes 9 surrounding counties. While Black residents only own 2.3% of employer businesses in Louisville, they own 9.8% of all businesses in the larger Louisville MSA.
+While employer businesses only make up about 20% of local registered businesses, they comprise 98.2% of local business revenue, and so we will focus our analysis there. We do note that while Black residents only own 2.3% of employer businesses in Louisville, they own 9.8% of all businesses in the larger Louisville MSA.
+
+Overall, the data show alarge racial disparity in ownership of employer businesses in Louisville.
 
 ## Comparison to peer cities
 
-In Jefferson County, Black residents make up 21.9% of the population, and they own 2.3% of employer-businesses. The graph below compares this ratio across Louisville's cities. Cities would fall on the solid line if Black residents were represented equally among business owners and the population. The dotted line shows the average level of representation of Black residents among business owners in Louisville's peer cities. Black residents are have higher-than-average representation in cities that fall above the dotted line, and they have below-average representation in cities below the line, but no cities, including Louisville, come close to equal representation. 
+In Jefferson County, Black residents make up 21.9% of the population, and they own 2.3% of employer businesses. The graph below compares this ratio across Louisville's cities. Cities would fall on the solid line if Black residents were represented equally among employer business owners and the population. The dotted line shows the average level of representation of Black residents among employer business owners in Louisville's peer cities. Black residents have higher-than-average representation in cities that fall above the dotted line, and they have below-average representation in cities below the line, but no cities, including Louisville, come close to equal representation. 
 
 ```{r}
 pct_nonemp_business <- 57630 / (57630 + 14785)
@@ -184,7 +188,7 @@ ranking(business_ownership_county_clean,
 
 ## Local business creation
 
-The map below shows business filings throughout 2020 within Jefferson County. These businesses include any type of LLC, corporation, or nonprofit officially registered with the state of Kentucky. Compared to the previous data that focuses on larger organizations, it shows that entrepreneurship is widspread throughout the city.
+The map below shows business filings throughout 2020 within Jefferson County. These businesses include any type of LLC, corporation, or nonprofit officially registered with the Commonwealth of Kentucky. Compared to the previous data that focuses on larger organizations, it shows that entrepreneurship is widespread throughout the city.
 
 ```{r}
 cols_spec <- cols("organization_number" = col_character(),
@@ -343,7 +347,7 @@ leaflet(t) %>%
 
 # Housing (Local)
 
-While housing represents a significant component of wealth. Housing reflects both historical wealth patterns––parental wealth makes it easier to buy a home––and is a major generator of wealth as, historically, homes have risen in value, increasing the wealth of those who own them. 
+Homeownership represents a significant component of wealth. Housing reflects historical wealth patterns––parental wealth makes it easier to buy a home––and is a major generator of wealth--historically, homes in most neighborhoods have risen in value, increasing the wealth of those who own them. 
 
 The data show stark divides between Black and white families throughout the homeownership process, demonstrating one aspect of the wealth gap. 
 
@@ -351,7 +355,7 @@ The data show stark divides between Black and white families throughout the home
 
 ### Mortgages by geography
 
-In 2019, about 3.8 mortgages were issued per 100 residents; however, the availability of mortgages varies greatly across the city. Two census tracts saw 0 mortgages issued in 2019, and most of West Louisville saw fewer than 1 mortgage issued per 100 residents. Meanwhile, many areas experienced a much larger availability of mortgages, especially where there is new construction around the edges of the county.
+In 2019, about 3.8 mortgages were issued per 100 residents in Jefferson County; however, the availability of mortgages varies greatly across the city. Two census tracts saw 0 mortgages issued in 2019, and most of West Louisville saw fewer than 1 mortgage issued per 100 residents. Often mortgage issuance is limited by a loan to value ratio that reflects property values in a given neighborhood relative to the replacement value of the structure Mortgage issuance is much higher in neighborhoods with higher overall value or new construction.
 
 ```{r mortgages_per_person}
 home_loan_tract_race <- home_loan_tract %>%
@@ -456,7 +460,7 @@ plt_by(mortgage_county, Race, loan_number_per_100, "Mortgages by race", y_axis =
 
 ### Mortgage Dollars by race
 
-The racial disparity is mortgages is even larger when you incorporate the dollar amount of mortgages issues. In 2019, white residents received \$2.60 in mortgages for every \$1 that Black residents received after adjusting for population size.
+The racial disparity in mortgages is even larger when you incorporate the dollar amount of mortgages issued. In 2019, white residents received \$2.60 in mortgages for every \$1 that Black residents received after adjusting for population size.
 
 ```{r mortgage_dollars_race}
 plt_by(mortgage_county, Race, loan_amount_pp, "Mortgage Lending by race", y_axis = "Dollars per 100 People", y_min = 0,
@@ -498,7 +502,7 @@ As Louisville grows, increasing home prices reflect changes in inflation and inc
 
 ### Long-term appreciation
 
-This map shows the change in existing home prices across zip codes since 2000, controlling for new construction. Since 2000, existing homes in Louisville have increased in value by an average of 57% (an average of about 2.4% per year). However, not every area of the city has benefited equally from this growth. Home prices in zip code 40204, which contains the Upper Highlands and Germantown, have more than doubled since 2000. While many zip codes close to downtown also saw high growth, many parts of West Louisville saw slow growth, and homes in 40212 lost value.
+This map shows the change in existing home prices across zip codes since 2000 in Jefferson County, controlling for new construction. Since 2000, existing homes in Louisville have increased in value by an average of 62% after accounting for inflation, an average of about 2.4% per year. However, not every area of the city has benefited equally from this growth. Home prices in zip code 40204, which contains the Upper Highlands and Germantown, have more than doubled since 2000. While many zip codes close to downtown also saw high growth, many parts of West Louisville saw slow growth.
 
 ```{r long_term_appreciation}
 lou_num <- HPI_county %>% filter(FIPS == "21111")
@@ -506,11 +510,12 @@ lou_num <- HPI_county %>% filter(FIPS == "21111")
 housing_price_index <- HPI_zip
 
 housing_price_index %<>% 
-  filter(year == 2019)
+  filter(year == 2020)
 
 map_zip %<>% left_join(housing_price_index, by = "zip")
 
 hpi_change <- c("Lost value", "0% - 25%", "25% - 50%", "50% - 75%", "75% - 100%", "100% - 125%")
+
 hpi_2015_change <- c("Lost value", "0% - 10%", "10% - 20%", "20% - 30%", "30% - 40%", "40% - 50%")
 
 map_zip %<>%
@@ -539,16 +544,17 @@ map_zip %<>%
       factor(levels = hpi_2015_change, ordered = TRUE))
 
 ggplot(map_zip) + 
-  geom_sf(aes(fill = hpi_fill)) +
-  scale_fill_manual(values = viridis::viridis(6, direction = -1), na.value = "grey") +
-  #scale_fill_viridis() +
+  geom_sf(aes(fill = HPI - 100)) +
+  #scale_fill_manual(values = viridis::viridis(6, direction = -1), na.value = "grey") +
+  scale_fill_viridis(breaks = c(25, 50, 75, 100, 125), 
+                     limits = c(24, 126),
+                     name = "Percent") +
   theme_bw(base_size = 22, base_family = "Montserrat") +
   theme(panel.grid = element_blank(),
         axis.text = element_blank(),
         axis.ticks = element_blank(),
         axis.title = element_blank(),
-        panel.border = element_blank(),
-        legend.title = element_blank()) +
+        panel.border = element_blank()) +
   labs(title = "Change in housing prices since 2000") +
   theme(
     panel.background = element_rect(fill = "transparent", color = NA), # bg of the panel
@@ -560,20 +566,19 @@ ggplot(map_zip) +
 
 ### Short-term appreciation
 
-Looking at the growth since 2015 highlights zip codes where changes in home prices have been very acute. The average home in Louisville increased in value by 21% between 2015 and 2019. The vast majority of zip codes saw total growth of 10% - 30%, while changes in home prices for zip codes in West Louisville range from a decrease of 30% in 40212 to an increase of 40% in 40203. The rapid price increase in 40203, which contains parts of Russell and Old Louisville, threaten to displace many residents. In 40203, home prices across Louisville increased by an average of 8.8% per year.
+Looking at the growth since 2015 highlights zip codes where changes in home prices have been very acute. The average home in Louisville increased in value by 24% between 2015 and 2020. Most zip codes saw total growth of 20% - 35%, while changes in home prices for zip codes in West Louisville range from an increase of 15% in 40212 to an increase of 46% in 40203. Home prices in 40203 have increased by an average of 7.9% per year since 2015, and they threaten to displace many residents from parts of Russell and Old Louisville. 
 
 ```{r short_term_appreciation}
 ggplot(map_zip) + 
-  geom_sf(aes(fill = hpi_2015_fill)) +
-  scale_fill_manual(values = viridis::viridis(6, direction = -1), na.value = "grey") +
-  #scale_fill_viridis() +
+  geom_sf(aes(fill = HPI5)) +
+  #scale_fill_manual(values = viridis::viridis(6, direction = -1), na.value = "grey") +
+  scale_fill_viridis(name = "Percent") +
   theme_bw(base_size = 22, base_family = "Montserrat") +
   theme(panel.grid = element_blank(),
         axis.text = element_blank(),
         axis.ticks = element_blank(),
         axis.title = element_blank(),
-        panel.border = element_blank(),
-        legend.title = element_blank()) +
+        panel.border = element_blank()) +
   labs(title = "Change in housing prices since 2015") +
   theme(
     panel.background = element_rect(fill = "transparent", color = NA), # bg of the panel
@@ -586,7 +591,8 @@ ggplot(map_zip) +
 
 ## Home Valuation by Geography
 
-On average, owner-occupied homes in Black neighborhoods are undervalued by $48,000 per house in the U.S. [According to that same reserach by the Brookings Institute](https://www.brookings.edu/research/devaluation-of-assets-in-black-neighborhoods/) The median home value in majority Black neighborhoods is \$89,681, but would be \$117,593 if houses were not devalued in the Louisville Metro Area. This difference consistutes a 27% undervaluation from what home values in Black neighborhoods would be if based on structural characteristics (e.g. sq. ft, year built) and neighborhood amenities (e.g. walkability, school districts, commute time).
+
+According to [research by Dr. Andre Perry at the Brookings Institute](https://www.brookings.edu/research/devaluation-of-assets-in-black-neighborhoods/), owner-occupied homes in Black neighborhoods are, on average, undervalued by $48,000 per house in the U.S. In the Louisville Metro Area, the median home value in majority Black neighborhoods is \$89,681, but would be \$117,593 if houses were not devalued, according to the same research. This difference constitutes a 27% undervaluation from what home values in Black neighborhoods would be if based on structural characteristics (e.g. sq. ft, year built) and neighborhood amenities (e.g. walkability, school districts, commute time) alone.
 
 ```{r}
 devaluation <- read_csv("devaluation.csv")
@@ -764,7 +770,7 @@ ranking_switch(devaluation,
 
 ## Property Taxes
 
-While facing lower home values on the market, Black homes are overvalued by the property tax administration, and thus face [higher taxation relative to the market value of their homes](https://www.washingtonpost.com/context/the-assessment-gap-racial-inequalities-in-property-taxation/215957a4-d5ad-47cd-821a-070cf23b6bc7/). 
+While facing lower home values on the market, homes in majority-Black neighborhoods are valued relatively-higher than homes in majority-white by the property tax administration, and thus face [higher taxation relative to the market value of their homes](https://www.washingtonpost.com/context/the-assessment-gap-racial-inequalities-in-property-taxation/215957a4-d5ad-47cd-821a-070cf23b6bc7/). 
 
 The Jefferson County Property Value Administration (PVA) assesses homes every three years to determine their value, and that value is used to determine the amount of property taxes the owner owes. The PVA compares homes to similar nearby properties to determine an appropriate valuation. Based on a comparison of property tax assessments to actual sale prices, data shows that property valuations tend to overvalue homes in some neighborhoods and undervalue them in others, resulting in different property tax rates for owners.
 
@@ -772,7 +778,7 @@ The Jefferson County Property Value Administration (PVA) assesses homes every th
 
 The map below compares property assessments to market values. A 100 means that the average property assessment in that neighborhood matched the home's market value, while a value of 90 means that the assessment was only 90% of the home's market value.
 
-Properties inside the Watterson and East of I-65 are consistenly valued, and thus taxed, at a lower rate than they are worth. Most over-assessments can be found in Southwest and South Louisville.
+Properties inside the Watterson and East of I-65 are consistently valued, and thus taxed, at a lower rate than they are worth. Most over-assessments can be found in Southwest and South Louisville.
 
 ```{r}
 # Load Property tax analysis webpage
@@ -926,7 +932,7 @@ make_map_bins(sales_ratio_bins,
 
 ### Property Taxes
 
-The property tax rate for homeowners differs by location. Most homeowners across the county pay taxes toward JCPS, and most homeowners who live inside the Watterson also pay taxes to the Urban Services District. Independent cities, fire departments, and school districts charge different rates throughout the county. As a result, there is no consistent property tax rate throughout Jefferson County, so differences in property taxes are a result of both local tax rates and property assessments.
+The property tax rate for homeowners differs by location. Most homeowners across the county pay taxes toward JCPS, and most homeowners who live inside the Watterson also pay taxes to the Urban Services District. Independent cities, fire departments, and school districts charge different rates throughout the county. As a result, there is no consistent property tax rate throughout Jefferson County. Differences in property tax rates are a result of both local tax rates and property assessments.
 
 The map below shows the effective property tax rate, or the amount of property tax homeowners paid based on the market value of their homes. The majority of homeowners pay a property tax of around 1% of their home's value. Homeowners in some neighborhoods pay slightly less, and many pay slightly more. The highest effective tax rates are found in West Louisville due to a combination of high property assessments relative to homes' values, and the property tax rate for the Urban Services District. 
 
@@ -940,7 +946,7 @@ make_map_bins(property_tax_bins,
 
 ## Undervaluation and Overtaxation
 
-This image summarizes the previous two sections. If homes in Black neighborhoods were valued by the market and taxed by the city like homes in other neighborhoods, homeowners in those neighborhoods would have higher-priced homes taxed at a lower rate.
+This image summarizes the previous two sections (home valuation and property assessments). If homes in Black neighborhoods were valued by the market and taxed by the city like homes in other neighborhoods, homeowners in those neighborhoods would have higher-priced homes taxed at a lower rate.
 
 ![Home valuation and taxation](home_taxes_GLP.png)
 *This follows Dr. Andre Perry's (Brookings Institute) methodology in defining a majority Black neighborhood as one with ≥ 50% Black residents.
@@ -1080,11 +1086,11 @@ t=housing_map %>%
 
 ## Homeownership {.tabset}
 
-We have the most data on housing - but this is not the only area of wealth building where this same pattern plays out. Black families both start with less wealth (and therefore less opportunities to build on it even in a ‘fair’ market) and face discrimination at each step of the process. 
+Black families both start with less wealth (and therefore less opportunities to build on it even in a ‘fair’ market) and this is compountded at each step of the home ownership process. 
 
 ### Ranking
 
-Slightly more than 1 in 3 Black Louisville residents own their own homes. While this is roughly toward the middle of our peer cities, it is roughly half the homeownership rate among white residents. Since 2010, Louisville's racial homeownership gap has been among the largest of our peer cities.
+Slightly more than 1 in 3 Black Louisville residents own their own homes. While this is roughly toward the middle of our peer cities, it is roughly half the homeownership rate among white residents.
 
 ```{r}
 housing_df <- housing_county %>%
@@ -1109,7 +1115,7 @@ ranking(housing_df,
 
 ### Trend
 
-Homeownership among all Louisville residents, including Black residents, has declined slightly since the early 2000s.
+Homeownership among all Louisville residents, including Black residents, has declined slightly since the early 2000s. Since 2010, Louisville's racial homeownership gap has been among the largest of our peer cities.
 
 ```{r}
 housing_df_clean <- housing_df %>%
@@ -1149,7 +1155,7 @@ Many activities that lead to wealth-creation, like starting a business or gettin
 
 ## Trendline
 
-While income for Black Households in Louisville has trended up over the last few years, the median Black household only receives about two-thirds the income of the median Louisville household. Additionally, after adjusting for inflation, median income declined among Black households from 2000 to 2013 and only surpriassed their previous levels in 2017.
+While income for Black Households in Louisville has trended up over the last few years, the median Black household only receives about two-thirds the income of the median Louisville household. After adjusting for inflation, median income declined among Black households from 2000 to 2013 and only surpassed their previous levels in 2017.
 
 ```{r hh_income_ranking}
 hh_income_filtered <- hh_income_county %>%
@@ -1193,5 +1199,5 @@ make_map(hh_income_total,
 
 # The Tip of the Iceberg 
 
-We have the most data on housing, income, and businesses, but these are not the only areas of wealth building where systemic inequality is pervasive. Black families start with less wealth (and therefore have less opportunities to build on it even in an 'equal’ market) and face discrimination at each step of the process. A better understanding of what metrics are important for describing Black wealth in both quantitative and qualitative terms is important to improve our work in this area. 
+We have the most data on housing, income, and businesses, but these are not the only areas of wealth building where systemic inequality is pervasive. Black families start with less wealth (and therefore have less opportunities to build on it even in an 'equal’ market) and face discrimination at each step of the process. A better understanding of what metrics are important for describing Black wealth in both quantitative and qualitative terms is important to improve our work in this area, and we welcome input.
 
