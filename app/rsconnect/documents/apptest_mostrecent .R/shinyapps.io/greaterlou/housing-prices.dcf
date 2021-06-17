@@ -1,0 +1,13 @@
+name: housing-prices
+title: housing-prices
+username:
+account: greaterlou
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4276733
+bundleId: 4723542
+url: https://greaterlou.shinyapps.io/housing-prices/
+when: 1623855818.76678
+lastSyncTime: 1623855818.76678
+asMultiple: FALSE
+asStatic: FALSE
