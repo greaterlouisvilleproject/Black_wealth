@@ -204,7 +204,7 @@ ui <- fluidPage(
             it reflects the combined impact of construction, inflation, and rising values. While that data is important for understanding housing affordability for new buyers,
             it does not describe changes in home equity for current homeowners."),
         h5("This tool shows data from the HUD Housing Price Index. It measures the change in value of single-family homes, and it controls for the impact of
-            construction and inflation on home prices. In other words, it compared the real value of homes to their value in the past."),
+            construction and inflation on home prices. In other words, it compares the real value of homes to their value in the past."),
         h5("To use the tool, select zip codes from the dropdown menu or by clicking on the map. You can change the starting year, ending year,
             and purchase price of a hypothetical home. The data you see on the graphs are controlled for inflation, and the dollar values shown reflect the first year on the slider."))
   ),#close title
@@ -264,6 +264,12 @@ ui <- fluidPage(
     
     uiOutput("map_title"),
   ),#close this small statement
+
+#statement over graph
+  fluidRow(
+    uiOutput("graph_statement"), 
+  ),
+
 
 #map and graph
 fluidRow(
@@ -337,6 +343,10 @@ server <- function(input, output, session) {
     h3(paste0("Average home values in ", input$years[2], " for homes worth ", dollar(input$price), " in ", input$years[1]), align = "center")
   })
   
+  output$graph_statement <- renderUI({
+    p("Hover over the graph to see specific values for each selected zipcode as well as the city average.", align = "right")
+  })
+  
   observe({
     
     zipcode <- as.vector(input$zipcode)
@@ -348,15 +358,15 @@ server <- function(input, output, session) {
     
     output$zips <- renderUI({
       if (length(zipcode) == 0) {
-        HTML("Select a zipcode to begin.")
+        HTML("Select a zipcode to begin in the dropdown (above) or by clicking the map (below).")
       } else {
         temp <- ""
         for(i in 1:length(zipcode)){
           this_zip <- original_data %>% filter(zip %in% zipcode[i])
           this_color <- this_zip %>% pull(zip_color) %>% unique()
           
-          format_pre <- paste0('<font color=\"', this_color, '\"><b><u>')
-          format_suf <- paste0('</u></b></font>')
+          format_pre <- paste0('<font color=\"', this_color, '\"><b>')
+          format_suf <- paste0('</b></font>')
           
           this_hpi <- this_zip %>% filter(year == year2) %>% pull(HPI_new)
           this_hpi_old <- this_zip %>% filter(year == year2) %>% pull(HPI_old)
@@ -524,7 +534,7 @@ server <- function(input, output, session) {
     #main = paste0("Housing Price Changes since ", input$years[1]))
     
     output_graph %<>%
-      dySeries("Louisville", label = "City Average", color = "#323844", strokeWidth = 3)
+      dySeries("Louisville", label = "Jefferson County Average", color = "#323844", strokeWidth = 3)
     
     if(length(input$zipcode) > 0) {
       for(z in 1:length(input$zipcode)) {
