@@ -5,9 +5,9 @@ account: greaterlou
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4276733
-bundleId: 4723542
+bundleId: 4740281
 url: https://greaterlou.shinyapps.io/housing-prices/
-when: 1623855818.76678
-lastSyncTime: 1623855818.76678
+when: 1624297694.77439
+lastSyncTime: 1624297694.77439
 asMultiple: FALSE
 asStatic: FALSE

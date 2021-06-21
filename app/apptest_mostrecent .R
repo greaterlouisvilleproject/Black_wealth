@@ -12,6 +12,8 @@ library(sf)
 library(stringr)
 library(viridis)
 
+#library(profvis)
+
 #setwd("app")
 
 #still to do
@@ -23,7 +25,7 @@ inflation <- readr::read_csv("cpi.txt", skip = 6, col_types = "nn")
 
 inflation %<>%
   transmute(year = Year,
-            cpi = first(Annual) / Annual)
+            cpi = Annual)
 
 # Pre-App Data Work ----
 # if("glpdata_exports.RData" %not_in% list.files()) {
@@ -43,16 +45,14 @@ HPI_zip %<>%
   complete(zip, year = 1975:2000) %>%
   left_join(inflation, by = "year") %>%
   mutate(
-    HPI_old = HPI_2000,
-    HPI_2000 = HPI_2000 * cpi)
+    HPI_unadjusted = HPI_2000)
 
 load("HPI_lou.RData")
 
 HPI_lou %<>%
   left_join(inflation, by = "year") %>%
   mutate(
-    HPI_old = HPI,
-    HPI = HPI * cpi)
+    HPI_unadjusted = HPI)
 
 addLegend_decreasing <- function (map, position = c("topright", "bottomright", "bottomleft","topleft"),
                                   pal, values, na.label = "NA", bins = 7, colors, 
@@ -157,16 +157,16 @@ addLegend_decreasing <- function (map, position = c("topright", "bottomright", "
 
 
 temp_df <- filter(HPI_zip, year == 2020) %>%
-  mutate(HPI_value = HPI_2000 * 100000 / 100)
+  mutate(HPI_value = HPI_unadjusted * 100000 / 100)
 
 temp_pal <- colorNumeric(
   palette = "viridis",
-  domain = temp_df$HPI_value)
+  domain = temp_df$HPI_unadjusted)
   
 starting_map <- leaflet() %>%
   addProviderTiles(providers$OpenStreetMap.HOT) %>%
   addPolygons(data=left_join(zip_map, temp_df, by = "zip"),
-              fillColor = ~temp_pal(HPI_value), 
+              fillColor = ~temp_pal(HPI_unadjusted), 
               fillOpacity = 0.5,
               opacity = 1, 
               color = "#FFFFFF",
@@ -175,8 +175,10 @@ starting_map <- leaflet() %>%
   #ok so add poloygons is what we are going to change
   setView(lng = -85.63, lat = 38.20, zoom = 10) %>%
   addLegend(position = "bottomright", 
-            values = c(range(temp_df$HPI_value, na.rm = T), NA_real_),
-            pal = temp_pal)
+            values = c(range(temp_df$HPI_unadjusted, na.rm = T), NA_real_),
+            pal = temp_pal,
+            title = "Price in 2020",
+            labFormat = labelFormat(prefix = "$"))
 
 #glp_colors <- c("#d63631", "#eaab21", "#8699ac", "#63b692") #a7bfd7", "#7CE3B6")
 glp_colors <- c("#0e4a99", "#f58021", "#00a9b7", 
@@ -194,19 +196,22 @@ ui <- fluidPage(
   tags$head(includeCSS("www/styles.css")),
   tags$head(tags$style('h2 {color:#00a0af;}')),
 
+  # The median price of an owner-occupied home in Jefferson County increased from $55,500 in 1990 to $185,700 in 2019. 
+  # Rising home prices in Louisville and across the country are the result of several factors: inflation has increased the price of houses alongside other goods, 
+  # construction of new houses and the renovation of older houses has increased the size and quality of homes, and the value of homes has simply gone up.
+  
   fluidRow(
     div(style="text-align: center;",
         h2("Housing Price Changes over Time Across Louisville Zipcodes"),
-        h5("The median price of an owner-occupied home in Jefferson County increased from $55,500 in 1990 to $185,700 in 2019. 
-            Rising home prices in Louisville and across the country are the result of several factors: inflation has increased the price of houses alongside other goods, 
-            construction of new houses and the renovation of older houses has increased the size and quality of homes, and the value of homes has simply gone up.
-            Homeownership provides a source of wealth-generation and stability, but most data on housing prices does not focus on the value of existing homes; instead
+        h5("Homeownership provides a source of wealth-generation and stability, but most data on housing prices does not focus on the value of existing homes; instead
             it reflects the combined impact of construction, inflation, and rising values. While that data is important for understanding housing affordability for new buyers,
-            it does not describe changes in home equity for current homeowners."),
-        h5("This tool shows data from the HUD Housing Price Index. It measures the change in value of single-family homes, and it controls for the impact of
-            construction and inflation on home prices. In other words, it compares the real value of homes to their value in the past."),
+            it doesn't describe changes in home equity for current homeowners."),
+        h5("This tool shows data from the ", tags$a(href='https://www.fhfa.gov/DataTools/Downloads/Pages/House-Price-Index.aspx', "HUD Housing Price Index"), ". 
+            It measures the change in value of single-family homes, and it controls for the impact of construction and renovation on home prices. 
+            In other words, it compares the real value of homes to their value in the past."),
         h5("To use the tool, select zip codes from the dropdown menu or by clicking on the map. You can change the starting year, ending year,
-            and purchase price of a hypothetical home. The data you see on the graphs are controlled for inflation, and the dollar values shown reflect the first year on the slider."))
+            and purchase price of a hypothetical home. You have the option of controlling for inflation, which can tell you more about the value of homes as an investment but can make the data more difficult to interpret.
+            When adjusting for inflation, the dollar values shown reflect the first year on the slider."))
   ),#close title
 
   hr(),
@@ -235,13 +240,17 @@ ui <- fluidPage(
            div(style="text-align: center;",
                shinyWidgets::autonumericInput(
                             inputId = "price",
-                            label= h4("Select a starting home value"),
+                            label= h4("Select a starting home price"),
                             value=100000,
                             min=0,
                             max=1000000,
                             currencySymbol = "$",
                             currencySymbolPlacement = "p",
-                            step=100))))
+                            step=100),
+               awesomeCheckbox(
+                 inputId = "inflation",
+                 label = "Adjust numbers below for inflation",
+                 value = FALSE))))
 
   ), #closes input fluid row
 
@@ -303,9 +312,23 @@ server <- function(input, output, session) {
       filter(year >= input$years[1],
              year <= input$years[2]) %>%
       group_by(zip) %>%
-      mutate(HPI_new = HPI_2000 / HPI_2000[year == input$years[1]] * 100,
-             HPI_value = round(HPI_new * input$price / 100, 0),
-             zip_color = "#FFFFFF")
+      mutate(
+        HPI_raw = HPI_unadjusted, # keep track of years for which data is available
+        zip_color = "#FFFFFF")
+    
+    if (input$inflation) {
+      HPI_zip %<>%
+        mutate(
+          HPI_raw = HPI_unadjusted, # keep track of years for which data is available
+          HPI_inflation = HPI_unadjusted / cpi * cpi[year == input$years[1]],
+          HPI  = HPI_inflation  / HPI_inflation[year == input$years[1]] * 100,
+          price = round(HPI * input$price / 100, 0))
+    } else {
+      HPI_zip %<>%
+        mutate(
+          HPI = HPI_unadjusted / HPI_unadjusted[year == input$years[1]] * 100,
+          price = round(HPI * input$price / 100, 0))
+    }
     
     if(length(input$zipcode) > 0) {
       for(i in 1:length(input$zipcode)) {
@@ -323,28 +346,43 @@ server <- function(input, output, session) {
   
   city_rebase <- reactive({
     
-    HPI_lou %>%
+    HPI_lou %<>%
       filter(year >= input$years[1],
-             year <= input$years[2]) %>%
-      mutate(HPI_new = HPI / HPI[year == min(year)] * 100)
+             year <= input$years[2])
     
+    if (input$inflation) {
+      HPI_lou %<>%
+        mutate(
+          HPI_inflation = HPI_unadjusted / cpi * cpi[year == input$years[1]],
+          HPI  = HPI_inflation  / HPI_inflation[year == input$years[1]] * 100,
+          price = round(HPI * input$price / 100, 0))
+
+    } else {
+      HPI_lou %<>%
+        mutate(
+          HPI = HPI_unadjusted / HPI_unadjusted[year == input$years[1]] * 100,
+          price = round(HPI * input$price / 100, 0))
+    }
+    
+    HPI_lou
+
   })
   
   this_map <- reactive({
     
     zip_rebase() %>%
       filter(year == input$years[2]) %>%
-      select(zip, HPI_new, HPI_value, zip_color) %>%
+      select(zip, HPI, price, zip_color) %>%
       left_join(zip_map, ., by = "zip")
     
   })
   
   output$map_title <- renderUI({
-    h3(paste0("Average home values in ", input$years[2], " for homes worth ", dollar(input$price), " in ", input$years[1]), align = "center")
+    h3(paste0("Average home prices in ", input$years[2], " for homes worth ", dollar(input$price), " in ", input$years[1]), align = "center")
   })
   
   output$graph_statement <- renderUI({
-    p("Hover over the graph to see specific values for each selected zipcode as well as the city average.", align = "right")
+    p("Hover over the graph to see specific prices for each selected zipcode as well as the city average.", align = "right")
   })
   
   observe({
@@ -353,12 +391,11 @@ server <- function(input, output, session) {
     year1 <- input$years[1]
     year2 <- input$years[2]
     homevaluedollar <- dollar(input$price)
-    homevalue <- input$price
     original_data <- zip_rebase()
     
     output$zips <- renderUI({
       if (length(zipcode) == 0) {
-        HTML("Select a zipcode to begin in the dropdown (above) or by clicking the map (below).")
+        HTML("To begin, select a zipcode from the dropdown above or by clicking the map below.")
       } else {
         temp <- ""
         for(i in 1:length(zipcode)){
@@ -368,13 +405,13 @@ server <- function(input, output, session) {
           format_pre <- paste0('<font color=\"', this_color, '\"><b>')
           format_suf <- paste0('</b></font>')
           
-          this_hpi <- this_zip %>% filter(year == year2) %>% pull(HPI_new)
-          this_hpi_old <- this_zip %>% filter(year == year2) %>% pull(HPI_old)
+          this_zip %<>% filter(year == year2)
+          this_HPI <- this_zip %>% pull(HPI)
           
-          if (is.na(this_hpi)){
+          if (is.na(this_HPI)){
             
             min_year <- original_data %>%
-              filter(zip %in% zipcode[i], !is.na(HPI_2000)) %>%
+              filter(zip == zipcode[i], !is.na(HPI_raw)) %>%
               pull(year) %>%
               min(na.rm = TRUE)
             
@@ -382,17 +419,18 @@ server <- function(input, output, session) {
             
           } else {
 
-            this_percent <- percent(abs(this_hpi - 100), scale = 1, accuracy = 0.1)
-            newprice <- dollar(homevalue * this_hpi / 100, accuracy = 1)
-            newprice2 <- dollar(homevalue * this_hpi_old / 100, accuracy = 1)
+            this_price <- this_zip %>% pull(price) %>% dollar(accuracy = 1)
+            this_percent  <- percent(abs(this_HPI - 100), scale = 1, accuracy = 0.1)
+            this_word <- if_else(this_HPI - 100 > 0, "increased", "decreased")
             
-            this_word <- if_else(this_hpi - 100 > 0, "increased", "decreased")
+            inflation_note <- if_else(input$inflation, paste0(" (in ", input$years[1], " dollars)"), "")
             
             temp <- paste0(temp, "In ", format_pre, zipcode[i], format_suf, ", home values ", format_pre, this_word, format_suf, 
                            " by ", format_pre, this_percent, format_suf, " from ", 
                            year1, " to ", year2, ". An average home that was worth ", homevaluedollar, " in ", year1, " would be worth ", 
-                           format_pre, newprice, format_suf, " in ", year2, 
-                           ". Without controlling for inflation, that would be ", format_pre, newprice2, format_suf, " in today's dollars.", br(),br())
+                           format_pre, this_price, format_suf, " in ", year2, inflation_note, ".", br(), br())
+            
+                           #" In ", year1, " dollars, that would be ", format_pre, price_inflation, format_suf, ".", br(),br())
             rm(this_zip)
           }
         }
@@ -421,22 +459,26 @@ server <- function(input, output, session) {
     
     this_pal <- colorNumeric(
       palette = "viridis",
-      domain = map_obj$HPI_value) 
+      domain = map_obj$price) 
+    
+    inflation_note <- if_else(input$inflation, paste0(" (in ", input$years[1], " dollars)"), "")
     
     map_obj %<>%
       mutate(
-        these_words = if_else(HPI_new - 100 > 0, "increased", "decreased"),
+        these_words = if_else(HPI - 100 > 0, "increased", "decreased"),
         this_label_text = if_else(
-          is.na(map_obj$HPI_new),
-          paste0("Data is not available for ", input$years[1], " in <b>", map_obj$zip, "</b>. Please choose a more recent year."),
+          is.na(HPI),
+          paste0("Data is not available for ", input$years[1], " in <b>", zip, "</b>. Please choose a more recent year."),
           paste0("Prices <b>", these_words, "</b> by an average of ", 
-                 "<b>", scales::percent(abs(map_obj$HPI_new - 100), scale = 1, accuracy = 0.1), "</b>",
-                 " between ", input$years[1], " and ", input$years[2], ".")),
+                 "<b>", scales::percent(abs(HPI - 100), scale = 1, accuracy = 0.1), "</b>",
+                 " between ", input$years[1], " and ", input$years[2], ". <br>",
+                 "An average home that was worth ", dollar(input$price, accuracy = 1), " in ", input$years[1], " would be worth <b>", 
+                 dollar(price, accuracy = 1), "</b> in ", input$years[2], inflation_note, ".")),
         this_label_text = if_else(zip == "40209",
-                                  "This zip code is mostly the airport and fairgrounds. Housing price data is not available for it.",
+                                  "This zip code is mostly the airport and fairgrounds. Housing price data is not available for 40209.",
                                   this_label_text),
         this_label_text = if_else(zip == "40225",
-                                  "This zip code is GE Appliance Park. Housing price data is not available for it.",
+                                  "This zip code is GE Appliance Park. Housing price data is not available for 40225.",
                                   this_label_text),
         these_labels = paste0("<center><b>", zip, "</b></center>", this_label_text) %>%
           lapply(htmltools::HTML),
@@ -445,64 +487,49 @@ server <- function(input, output, session) {
     
     
     # Organize object so most recently-clicked polygon is loaded last (on top)
-    if(length(input$zipcode) > 0) {
-      
-      map_obj <-
-        bind_rows(
-          map_obj[map_obj$zip %not_in% input$zipcode,],
-          map_obj[map_obj$zip %in% input$zipcode,]
-        )
-      
-    }
+    # if(length(input$zipcode) > 0) {
+    #   
+    #   map_obj <-
+    #     bind_rows(
+    #       map_obj[map_obj$zip %not_in% input$zipcode,],
+    #       map_obj[map_obj$zip %in% input$zipcode,]
+    #     )
+    #   
+    # }
+    
+    selected_zips <- map_obj[map_obj$zip %in% input$zipcode,]
+    unselected_zips <- map_obj[map_obj$zip %not_in% input$zipcode,]
+
+    inflation_note <- if_else(input$inflation, 
+                              paste0("<br>(", input$years[1], " dollars)"),
+                              "")
     
     leafletProxy("map", data = map_obj) %>%
       clearControls() %>%
       clearShapes() %>%
-      # addMapPane("top", 442) %>%
-      # addMapPane("bottom", 441) %>%
-      addMapPane("polygons", zIndex = 420) %>% # shown below ames_circles
-      addMapPane("lines", zIndex = 430) %>% # shown above ames_lines
       
-      # color
-      addPolygons(fillColor = ~this_pal(HPI_value),
+      # add shape color and white lines for all polygons
+      addPolygons(fillColor = ~this_pal(price),
                   fillOpacity = 0.5,
-                  stroke = F,
-                  opacity = 1,
-                  smoothFactor = 1.5) %>%
-      
-      # white
-      addPolygons(fillOpacity = 0,
                   opacity = 1,
                   color = "#FFFFFF",
                   weight = map_obj$bg_weights,
-                  smoothFactor = 1.5) %>%
-      
-      addPolygons(fillOpacity = 0,
-                  opacity = 1,
-                  color = map_obj$zip_color,
-                  weight = map_obj$weights,
                   label = map_obj$these_labels,
                   layerId = map_obj$zip,
                   smoothFactor = 1.5) %>%
       
-      
-      # addPolygons(fillColor = ~this_pal(HPI_value), 
-      #             fillOpacity = 0.5,
-      #             #stroke = F,
-      #             opacity = 1,
-      #             color = map_obj$zip_color,
-      #             weight = map_obj$weights,
-      #             label = map_obj$these_labels,
-      #             layerId = map_obj$zip,
-      #             options = pathOptions(pane = "polygons")) %>%
+      # add colored lines for selected zipcodes
+      addPolylines(data = selected_zips,
+                   opacity = 1,
+                   color = selected_zips$zip_color,
+                   weight = selected_zips$weights,
+                   smoothFactor = 1.5) %>%
 
-      # addPolygons(fillOpacity = 0,
-      #             opacity = 1, 
-      #             color = "#FFFFFF",
-      #             weight = map_obj$bg_weights) %>%
       addLegend_decreasing(position = "bottomright", decreasing = T,
-                values = c(range(map_obj$HPI_value, na.rm = T), NA_real_),
-                pal = this_pal)
+                values = c(range(map_obj$price, na.rm = T), NA_real_),
+                pal = this_pal,
+                title = paste0("Price in ", input$years[2], inflation_note),
+                labFormat = labelFormat(prefix = "$"))
     
   })
   
@@ -513,17 +540,16 @@ server <- function(input, output, session) {
     
     zip_df %<>%
       filter(zip %in% input$zipcode) %>%
-      transmute(geog = zip, year, HPI_new)
+      transmute(geog = zip, year, price)
     
     city_df %<>%
-      transmute(geog = "Louisville", year, HPI_new)
+      transmute(geog = "Louisville", year, price)
     
-    this_df <- bind_rows(zip_df, city_df) %>%
-      mutate(HPI_new = round(HPI_new * input$price / 100, 0))
+    this_df <- bind_rows(zip_df, city_df)
     
     this_df %<>%
       mutate(year = paste0("1/1/", year) %>% as.POSIXct(format = "%m/%d/%Y")) %>%
-      pivot_wider(id_cols = "year", names_from = "geog", values_from = "HPI_new")
+      pivot_wider(id_cols = "year", names_from = "geog", values_from = "price")
     
     max_value <- max(this_df[names(this_df) != "year"], na.rm = TRUE)
     
@@ -540,12 +566,14 @@ server <- function(input, output, session) {
       for(z in 1:length(input$zipcode)) {
         output_graph %<>%
           dySeries(input$zipcode[z], 
-                   color = glp_colors[(z - 1) %% length(glp_colors) + 1], # starts at 1 and goes 1 through 4
+                   color = glp_colors[(z - 1) %% length(glp_colors) + 1], # starts at 1 and goes 1 through length(glp_colors)
                    strokeWidth = 3)
       }
     }
     
     output_graph %<>% dyLegend(show = "always")
+    
+    inflation_note <- if_else(input$inflation, paste0(" (", input$years[1], " dollars)"), "")
     
     output_graph %<>%
       dyLimit(input$price, strokePattern = "solid") %>%
@@ -560,7 +588,7 @@ server <- function(input, output, session) {
              #         return Dygraph.getDateAxis(a, b, Dygraph.ANNUAL, opts, dygraph)
              #       }") %>%
       dyAxis("y",
-             "Estimated Value" ,
+             paste0("Estimated Value", inflation_note),
              axisLabelFormatter = "function(v){return '$' + v.toString().replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');}",
              valueFormatter = "function(v){return '$' + v.toString().replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');}",
              valueRange = c(0, max_value * 1.10),
