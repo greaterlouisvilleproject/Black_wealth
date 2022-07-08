@@ -12,7 +12,7 @@ library(sf)
 library(stringr)
 library(viridis)
 
-#library(profvis)
+library(profvis)
 
 #setwd("app")
 
@@ -170,8 +170,7 @@ starting_map <- leaflet() %>%
               fillOpacity = 0.5,
               opacity = 1, 
               color = "#FFFFFF",
-              weight = 2,
-              label = zip_map$zip) %>%
+              weight = 2) %>%
   #ok so add poloygons is what we are going to change
   setView(lng = -85.63, lat = 38.20, zoom = 10) %>%
   addLegend(position = "bottomright", 
@@ -202,23 +201,22 @@ ui <- fluidPage(
   
   fluidRow(
     div(style="text-align: center;",
-        h2("Housing Price Changes over Time Across Louisville Zipcodes"),
+        h2("Housing Price Growth Across Louisville Zipcodes"),
         h5("Homeownership provides a source of wealth-generation and stability, but most data on housing prices does not focus on the value of existing homes; instead
             it reflects the combined impact of construction, inflation, and rising values. While that data is important for understanding housing affordability for new buyers,
-            it doesn't describe changes in home equity for current homeowners."),
-        h5("This tool shows data from the ", tags$a(href='https://www.fhfa.gov/DataTools/Downloads/Pages/House-Price-Index.aspx', "HUD Housing Price Index"), ". 
+            it doesn't describe changes in home equity for current homeowners. This tool shows data from the ", tags$a(href='https://www.fhfa.gov/DataTools/Downloads/Pages/House-Price-Index.aspx', "HUD Housing Price Index"), ". 
             It measures the change in value of single-family homes, and it controls for the impact of construction and renovation on home prices. 
-            In other words, it compares the real value of homes to their value in the past."),
+            In other words, it compares the real value of homes to their value in the past.", style='font-size:16px'),
         h5("To use the tool, select zip codes from the dropdown menu or by clicking on the map. You can change the starting year, ending year,
             and purchase price of a hypothetical home. You have the option of controlling for inflation, which can tell you more about the value of homes as an investment but can make the data more difficult to interpret.
-            When adjusting for inflation, the dollar values shown reflect the first year on the slider."))
+            When adjusting for inflation, the dollar values shown reflect the first year on the slider.", style='font-size:16px'))
   ),#close title
 
   hr(),
 
    fluidRow(
 
-    column(4,
+    column(3,
            wellPanel(
            div(style="text-align: center;",
                selectInput("zipcode",
@@ -226,7 +224,7 @@ ui <- fluidPage(
                            choices = unique(HPI_zip$zip),
                            selected = NULL,
                            multiple=TRUE)))),
-    column(4,
+    column(3,
            wellPanel(
              div(style="text-align: center;",
                  sliderInput("years",
@@ -235,7 +233,7 @@ ui <- fluidPage(
                              max = 2020,
                              value = c(2000,2020),
                              sep = "")))),
-    column(4,
+    column(3,
            wellPanel(
            div(style="text-align: center;",
                shinyWidgets::autonumericInput(
@@ -246,14 +244,44 @@ ui <- fluidPage(
                             max=1000000,
                             currencySymbol = "$",
                             currencySymbolPlacement = "p",
-                            step=100),
-               awesomeCheckbox(
-                 inputId = "inflation",
-                 label = "Adjust numbers below for inflation",
-                 value = FALSE))))
+                            step=100)))),
+    # column(3,
+    #        wellPanel(
+    #          div(style="text-align: center;",
+    #              awesomeCheckbox(
+    #                inputId = "inflation",
+    #                label = h4("Adjust all data for inflation?"),
+    #                value = FALSE))))
+    # 
+    column(3,
+           wellPanel(
+             div(style="text-align: center;",
+                 HTML(
+                 '<div class="form-group shiny-input-container">
+                    <label style="cursor: pointer;" for="inflation">
+                      <h4>Adjust all data for inflation?</h4>
+                    </label>
+                    <div class="awesome-checkbox checkbox-primary">
+                      <input id="inflation" type="checkbox" data-shinyjs-resettable-id="inflation" data-shinyjs-resettable-type="Checkbox" data-shinyjs-resettable-value="false" class="shinyjs-resettable shiny-bound-input">
+                    </div>
+                  </div>'))))
+                  # conditionalPanel(
+                  #   "input.inflation == true",
+                  #   uiOutput("inflation_choices")))))
+                  
+    
+    # column(4,
+    #        wellPanel(
+    #          div(style="text-align: center;",
+                 # awesomeCheckbox(
+                 #   inputId = "inflation",
+                 #   label = "Adjust all data for inflation?",
+                 #   value = FALSE))))
 
   ), #closes input fluid row
 
+
+  
 #Outputs----
 
 #text outputs (2nd row)
@@ -262,7 +290,7 @@ ui <- fluidPage(
   fluidRow(
     column(12,
          div(style="text-align: center;",
-             h4(uiOutput("zips")))
+             h4(uiOutput("zips"), style='font-size:16px'))
     ), #close column1
   ), #close fluid row
 
@@ -276,7 +304,8 @@ ui <- fluidPage(
 
 #statement over graph
   fluidRow(
-    uiOutput("graph_statement"), 
+    column(6, p("(Hover over the map to see data for each zipcode.)", align = "center", style='color:#808080')),
+    column(6, p("(Hover over the graph to see prices for each selected zipcode and the city average.)", align = "center", style='color:#808080'))
   ),
 
 
@@ -305,6 +334,12 @@ server <- function(input, output, session) {
 #   homevaluedollar <- reactive({dollar(input$price)})
 #   homevalue <- reactive({input$price})
   
+  # output$inflation_choices <- renderUI(
+  #   radioGroupButtons(
+  #     inputId = "inflation_year",
+  #     label = "Use dollar values from:",
+  #     choices = input$years))
+  
 #Statements ----
   zip_rebase <- reactive({
     
@@ -315,19 +350,29 @@ server <- function(input, output, session) {
       mutate(
         HPI_raw = HPI_unadjusted, # keep track of years for which data is available
         zip_color = "#FFFFFF")
+  
+    print(input$inflation_year)
+    
+    if (!is.null(input$inflation_year)) {
+      inflation_year <- input$inflation_year
+    } else {
+      inflation_year <- input$years[1]
+    }
+    
+    HPI_zip %<>%
+      mutate(
+        HPI_raw = HPI_unadjusted, # keep track of years for which data is available
+        HPI_unadjusted = HPI_unadjusted / HPI_unadjusted[year == input$years[1]] * 100,
+        HPI_inflation = HPI_unadjusted / cpi * cpi[year == inflation_year],
+        price_unadjusted = round(HPI_unadjusted * input$price / 100, 0),
+        price_inflation = round(HPI_inflation * input$price / 100, 0))
     
     if (input$inflation) {
-      HPI_zip %<>%
-        mutate(
-          HPI_raw = HPI_unadjusted, # keep track of years for which data is available
-          HPI_inflation = HPI_unadjusted / cpi * cpi[year == input$years[1]],
-          HPI  = HPI_inflation  / HPI_inflation[year == input$years[1]] * 100,
-          price = round(HPI * input$price / 100, 0))
+      HPI_zip$HPI <- HPI_zip$HPI_inflation
+      HPI_zip$price <- HPI_zip$price_inflation
     } else {
-      HPI_zip %<>%
-        mutate(
-          HPI = HPI_unadjusted / HPI_unadjusted[year == input$years[1]] * 100,
-          price = round(HPI * input$price / 100, 0))
+      HPI_zip$HPI <- HPI_zip$HPI_unadjusted
+      HPI_zip$price <- HPI_zip$price_unadjusted
     }
     
     if(length(input$zipcode) > 0) {
@@ -350,18 +395,19 @@ server <- function(input, output, session) {
       filter(year >= input$years[1],
              year <= input$years[2])
     
+    HPI_lou %<>%
+      mutate(
+        HPI_unadjusted = HPI_unadjusted / HPI_unadjusted[year == input$years[1]] * 100,
+        HPI_inflation = HPI_unadjusted / cpi * cpi[year == input$years[1]],
+        price_unadjusted = round(HPI_unadjusted * input$price / 100, 0),
+        price_inflation = round(HPI_inflation * input$price / 100, 0))
+    
     if (input$inflation) {
-      HPI_lou %<>%
-        mutate(
-          HPI_inflation = HPI_unadjusted / cpi * cpi[year == input$years[1]],
-          HPI  = HPI_inflation  / HPI_inflation[year == input$years[1]] * 100,
-          price = round(HPI * input$price / 100, 0))
-
+      HPI_lou$HPI <- HPI_lou$HPI_inflation
+      HPI_lou$price <- HPI_lou$price_inflation
     } else {
-      HPI_lou %<>%
-        mutate(
-          HPI = HPI_unadjusted / HPI_unadjusted[year == input$years[1]] * 100,
-          price = round(HPI * input$price / 100, 0))
+      HPI_lou$HPI <- HPI_lou$HPI_unadjusted
+      HPI_lou$price <- HPI_lou$price_unadjusted
     }
     
     HPI_lou
@@ -372,19 +418,19 @@ server <- function(input, output, session) {
     
     zip_rebase() %>%
       filter(year == input$years[2]) %>%
-      select(zip, HPI, price, zip_color) %>%
+      select(zip, HPI_unadjusted, HPI_inflation, price_unadjusted, price_inflation, HPI, price, zip_color) %>%
       left_join(zip_map, ., by = "zip")
     
   })
   
   output$map_title <- renderUI({
-    h3(paste0("Average home prices in ", input$years[2], " for homes worth ", dollar(input$price), " in ", input$years[1]), align = "center")
+    
+    inflation_note <- if_else(input$inflation, paste0(" (in ", input$years[1], " dollars)"), "")
+    
+    h3(paste0("Average home prices in ", input$years[2], " for homes worth ", dollar(input$price), 
+              " in ", input$years[1], inflation_note), align = "center")
   })
-  
-  output$graph_statement <- renderUI({
-    p("Hover over the graph to see specific prices for each selected zipcode as well as the city average.", align = "right")
-  })
-  
+    
   observe({
     
     zipcode <- as.vector(input$zipcode)
@@ -406,7 +452,7 @@ server <- function(input, output, session) {
           format_suf <- paste0('</b></font>')
           
           this_zip %<>% filter(year == year2)
-          this_HPI <- this_zip %>% pull(HPI)
+          this_HPI <- this_zip %>% pull(HPI_unadjusted)
           
           if (is.na(this_HPI)){
             
@@ -419,18 +465,31 @@ server <- function(input, output, session) {
             
           } else {
 
-            this_price <- this_zip %>% pull(price) %>% dollar(accuracy = 1)
+            this_price <- this_zip %>% pull(price_unadjusted) %>% dollar(accuracy = 1)
             this_percent  <- percent(abs(this_HPI - 100), scale = 1, accuracy = 0.1)
             this_word <- if_else(this_HPI - 100 > 0, "increased", "decreased")
-            
-            inflation_note <- if_else(input$inflation, paste0(" (in ", input$years[1], " dollars)"), "")
             
             temp <- paste0(temp, "In ", format_pre, zipcode[i], format_suf, ", home values ", format_pre, this_word, format_suf, 
                            " by ", format_pre, this_percent, format_suf, " from ", 
                            year1, " to ", year2, ". An average home that was worth ", homevaluedollar, " in ", year1, " would be worth ", 
-                           format_pre, this_price, format_suf, " in ", year2, inflation_note, ".", br(), br())
+                           format_pre, this_price, format_suf, " in ", year2, ".", br())
             
-                           #" In ", year1, " dollars, that would be ", format_pre, price_inflation, format_suf, ".", br(),br())
+            if (input$inflation) {
+              this_HPI_inflation <- this_zip %>% pull(HPI_inflation)
+              this_price_inflation <- this_zip %>% pull(price_inflation) %>% dollar(accuracy = 1)
+              this_percent_inflation  <- percent(abs(this_HPI_inflation - 100), scale = 1, accuracy = 0.1)
+              this_word_inflation <- if_else(this_HPI_inflation - 100 > 0, "increased", "decreased")
+              inflation_note <- if_else(input$inflation, paste0(" (in ", input$years[1], " dollars)"), "")
+              
+              temp <- paste0(temp, "Adjusting for inflation, home values in ", format_pre, zipcode[i], " ", this_word_inflation, format_suf, 
+                             " by ", format_pre, this_percent_inflation, format_suf, " from ", 
+                             year1, " to ", year2, ". An average home that was worth ", homevaluedollar, " in ", year1, " would be worth ", 
+                             format_pre, this_price_inflation, format_suf, " in ", year2, " (in ", input$years[1], " dollars).", br())
+            }
+            
+            temp <- paste0(temp, br())
+            
+            #" In ", year1, " dollars, that would be ", format_pre, price_inflation, format_suf, ".", br(),br())
             rm(this_zip)
           }
         }
@@ -469,18 +528,17 @@ server <- function(input, output, session) {
         this_label_text = if_else(
           is.na(HPI),
           paste0("Data is not available for ", input$years[1], " in <b>", zip, "</b>. Please choose a more recent year."),
-          paste0("Prices <b>", these_words, "</b> by an average of ", 
-                 "<b>", scales::percent(abs(HPI - 100), scale = 1, accuracy = 0.1), "</b>",
-                 " between ", input$years[1], " and ", input$years[2], ". <br>",
-                 "An average home that was worth ", dollar(input$price, accuracy = 1), " in ", input$years[1], " would be worth <b>", 
-                 dollar(price, accuracy = 1), "</b> in ", input$years[2], inflation_note, ".")),
+          paste0("<p style='margin-bottom: 0.1em;'>From ", input$years[1], " to ", input$years[2], ", prices <b>", these_words, "</b><br>", 
+                 " by an average of <b>", scales::percent(abs(HPI - 100), scale = 1, accuracy = 0.1), "</b>. </p>",
+                 "An average home that was worth ", dollar(input$price, accuracy = 1), " in ", input$years[1], "<br>", 
+                 " would be worth <b>", dollar(price, accuracy = 1), "</b> in ", input$years[2], inflation_note, ".")),
         this_label_text = if_else(zip == "40209",
                                   "This zip code is mostly the airport and fairgrounds. Housing price data is not available for 40209.",
                                   this_label_text),
         this_label_text = if_else(zip == "40225",
                                   "This zip code is GE Appliance Park. Housing price data is not available for 40225.",
                                   this_label_text),
-        these_labels = paste0("<center><b>", zip, "</b></center>", this_label_text) %>%
+        these_labels = paste0("<p style='margin-bottom: 0.1em;'><font size='2'><center><b>", zip, "</b></p>", this_label_text, "</center></font>") %>%
           lapply(htmltools::HTML),
         bg_weights = if_else(zip_color == "#FFFFFF", 1, 6),
         weights = if_else(zip_color == "#FFFFFF", 1, 3))
@@ -515,6 +573,7 @@ server <- function(input, output, session) {
                   color = "#FFFFFF",
                   weight = map_obj$bg_weights,
                   label = map_obj$these_labels,
+                  labelOptions = labelOptions(opacity = 0.9),
                   layerId = map_obj$zip,
                   smoothFactor = 1.5) %>%
       
@@ -603,6 +662,8 @@ server <- function(input, output, session) {
     current_zips <- input$zipcode
     
     map_click <- input$map_shape_click$id
+    
+    if(is.null(map_click)) return()
     
     if (map_click %in% current_zips) {
       new_zips <- setdiff(current_zips, map_click)
